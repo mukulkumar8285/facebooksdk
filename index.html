@@ -43,14 +43,14 @@
     }
     function redirectWithError(errorCode) {
       console.warn('[index.html] redirectWithError:', errorCode);
-      const redirectBase = 'https://mukulkumar8285.github.io/facebooksdk/';
+      const redirectBase = 'https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ';
       const url = redirectBase + '?error=' + encodeURIComponent(errorCode);
       console.log('[index.html] redirecting to:', url);
       window.location.href = url;
     }
     function redirectWithData(payload) {
       console.log('[index.html] redirectWithData payload:', payload);
-      const redirectBase = 'https://mukulkumar8285.github.io/facebooksdk/';
+      const redirectBase = 'https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ';
       const params = [];
       const data = payload.data || {};
       if (data.waba_id) params.push('waba_id=' + encodeURIComponent(data.waba_id));
@@ -98,8 +98,8 @@
         return;
       }
       if (payload.type === 'WA_indexDED_SIGNUP') {
-        logStatus('Signup completed. Sending to React Native…');
-        postToRN({ success: true, data: payload });
+      //  logStatus('Signup completed. Sending to React Native…');
+       // postToRN({ success: true, data: payload });
         redirectWithData(payload);
       } else {
         console.warn('[index.html] Ignoring payload.type:', payload.type);
@@ -122,11 +122,13 @@
         config_id: CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
-        extras: {
+        <!-- extras: {
           setup: {},
           featureType: '',
           sessionInfoVersion: '3'
-        }
+        } -->
+          redirect_uri:
+        "https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ",
       });
     }
   </script>
