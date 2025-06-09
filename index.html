@@ -54,14 +54,14 @@
 
     // Redirect or close the window after a delay
     function closeAfterSuccess(seconds = 15) {
-      logStatus(`Success! Closing window in ${seconds} seconds...`);
+      logStatus(`Signup completed. Closing window in ${seconds} seconds...`);
       setTimeout(() => {
         try {
           window.close();
         } catch (err) {
           console.warn('[embed.html] window.close failed. Redirecting instead.');
         }
-        window.location.href = 'https://mukulkumar8285.github.io/';
+        window.location.href = 'https://mukulkumar8285.github.io/facebooksdk/whatsapp-callback';
       }, seconds * 1000);
     }
 
@@ -75,48 +75,21 @@
     // Initialize FB SDK
     function initFB() {
       console.log('[embed.html] Initializing FB SDK');
-      logStatus('FB SDK loaded. Initializing...');
+      logStatus('FB SDK loaded. Launching WhatsApp Signup...');
 
-      FB.init({
-        appId: APP_ID,
-        autoLogAppEvents: true,
-        xfbml: false,
-        version: 'v23.0'
-      });
-
-      console.log('[embed.html] FB.init complete');
-      logStatus('FB initialized. Launching WhatsApp signup...');
+      // Directly launch signup to avoid popup
       launchWhatsAppSignup();
     }
 
-    // Launch WhatsApp embedded signup
+    // Launch WhatsApp embedded signup without popup
     function launchWhatsAppSignup() {
-      console.log('[embed.html] launchWhatsAppSignup started');
-
-      FB.login(response => {
-        console.log('[embed.html] FB.login response:', response);
-
-        if (response.status === 'connected') {
-          logStatus('Login successful. Waiting for signup completion...');
-        } else {
-          console.error('[embed.html] Login failed or cancelled');
-          logStatus('Login failed or cancelled');
-          postToRN({ success: false, error: 'login_failed', details: response });
-        }
-      }, {
-        config_id: CONFIG_ID,
-        response_type: 'code',
-        override_default_response_type: true,
-        redirect_uri: REDIRECT_URI,
-        extras: {
-          setup: {},
-          featureType: '',
-          sessionInfoVersion: '3'
-        }
-      });
+      console.log('[embed.html] launchWhatsAppSignup started (no popup)');
+      const signupUrl = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=whatsapp_business_messaging,whatsapp_business_management,business_management&response_type=code&config_id=${CONFIG_ID}`;
+      logStatus('Redirecting to embedded signup in same window…');
+      window.location.href = signupUrl;
     }
 
-    // Handle postMessage from FB embedded signup
+    // Handle messages from Facebook (e.g., embedded flow completion)
     window.addEventListener('message', (event) => {
       console.log('[embed.html] Message received from origin:', event.origin);
 
