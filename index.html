@@ -15,6 +15,7 @@
   <script>
     window.open = function(url) {
       window.location.href = url;
+      console.log(url);
     };
   </script>
 
@@ -22,18 +23,22 @@
   <script>
     function logStatus(msg) {
       console.log('[embed.html]', msg);
+      console.log("logstatus" , msg);
       const el = document.getElementById('status');
       if (el) el.textContent = msg;
     }
     function postToRN(obj) {
       const str = JSON.stringify(obj);
       if (window.ReactNativeWebView) {
+        console.log("no RN bridge, data:" , str);
         window.ReactNativeWebView.postMessage(str);
       } else {
+        console.log("no RN bridge, data:" , obj);
         console.log('[embed.html] no RN bridge, data:', obj);
       }
     }
     function onFbSdkError() {
+      console.log("err",{ success: false, error: 'FB SDK failed to load' } )
       logStatus('ERROR loading FB SDK');
       postToRN({ success: false, error: 'FB SDK failed to load' });
     }
@@ -65,6 +70,7 @@
 
     // Listen for the signup result via postMessage
     window.addEventListener('message', event => {
+      console.log("event", event);
       // Only accept messages from Facebook
       if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) {
         return;
@@ -72,11 +78,15 @@
       let data;
       try { 
         data = JSON.parse(event.data);
+        console.log("data", data);
        if (data.type === 'WA_EMBEDDED_SIGNUP') {
         logStatus('Signup completed. Sending to React Native…');
         postToRN({ success: true, data });
       } }
-      catch { return; }
+      catch(err) {
+        
+        console.log("error", err);
+        return; }
       // The Embedded Signup payload has type 'WA_EMBEDDED_SIGNUP'
      
     });
@@ -84,9 +94,11 @@
     // Launch the Embedded Signup flow automatically
     function launchWhatsAppSignup() {
       FB.login(response => {
+        console.log("response", response);
         if (response.status === 'connected') {
           logStatus('Login succeeded, awaiting embedded signup…');
         } else {
+          console.log("error",{ success: false, error: response } )
           logStatus('User canceled or login failed');
           postToRN({ success: false, error: response });
         }
