@@ -11,7 +11,14 @@
   <!-- 1) Prepare container for FB SDK -->
   <div id="fb-root"></div>
 
-  <!-- 2) Helper functions -->
+  <!-- 2) Override window.open to force same-window navigation -->
+  <script>
+    window.open = function(url) {
+      window.location.href = url;
+    };
+  </script>
+
+  <!-- 3) Helper functions -->
   <script>
     function logStatus(msg) {
       console.log('[embed.html]', msg);
@@ -32,7 +39,7 @@
     }
   </script>
 
-  <!-- 3) Load FB JavaScript SDK -->
+  <!-- 4) Load FB JavaScript SDK -->
   <script async defer crossorigin="anonymous"
     src="https://connect.facebook.net/en_US/sdk.js"
     onload="initFB()"
