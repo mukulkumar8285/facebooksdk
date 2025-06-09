@@ -75,7 +75,9 @@
       // The Embedded Signup payload has type 'WA_EMBEDDED_SIGNUP'
       if (data.type === 'WA_EMBEDDED_SIGNUP') {
         logStatus('Signup completed. Sending to React Native…');
+        console.log(data);
         postToRN({ success: true, data });
+        
       }
     });
 
