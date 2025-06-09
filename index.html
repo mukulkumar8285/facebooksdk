@@ -1,57 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8">
   <title>WhatsApp Embedded Signup</title>
   <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    #status { margin-top: 1rem; color: #555; }
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+    }
+    #status {
+      margin-top: 1rem;
+      color: #555;
+    }
   </style>
+</head>
+<body>
+  <h2>WhatsApp Embedded Signup</h2>
+  <div id="status">Initializing...</div>
   <div id="fb-root"></div>
 
   <script>
+    // Constants
     const APP_ID = '523707793850383';
     const CONFIG_ID = '683389464136204';
-    const REDIRECT_URI = 'https://mukulkumar8285.github.io/whatsapp-callback.html';
+    const REDIRECT_URI = 'https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ';
 
+    // Replace window.open to force same-window redirect
+    console.log('[embed.html] Overriding window.open');
+    window.open = function (url) {
+      console.log('[embed.html] window.open intercepted, redirecting to:', url);
+      window.location.href = url;
+    };
+
+    // Helper to log status on screen and console
     function logStatus(msg) {
       console.log('[embed.html] STATUS:', msg);
       const el = document.getElementById('status');
       if (el) el.textContent = msg;
     }
 
-    function postToRN(obj) {
-      const str = JSON.stringify(obj);
-      console.log('[embed.html] postToRN data:', obj);
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(str);
-        console.log('[embed.html] postMessage sent to RN');
+    // Post message to React Native (if present)
+    function postToRN(data) {
+      try {
+        const str = JSON.stringify(data);
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(str);
+          console.log('[embed.html] postMessage sent to React Native:', data);
+        }
+      } catch (e) {
+        console.error('[embed.html] Failed to stringify data for RN:', e);
       }
     }
 
-    function closeWindowAfterDelay(seconds) {
-      logStatus(`Signup successful. Closing in ${seconds} seconds...`);
+    // Redirect or close the window after a delay
+    function closeAfterSuccess(seconds = 15) {
+      logStatus(`Success! Closing window in ${seconds} seconds...`);
       setTimeout(() => {
-        logStatus("Closing window now.");
-        window.close(); // this works only if window was opened via JS
-        window.location.href = "https://www.facebook.com/dialog/close_window/?app_id=" + APP_ID;
+        try {
+          window.close();
+        } catch (err) {
+          console.warn('[embed.html] window.close failed. Redirecting instead.');
+        }
+        window.location.href = 'https://mukulkumar8285.github.io/';
       }, seconds * 1000);
     }
 
+    // Handle SDK load failure
     function onFbSdkError() {
-      logStatus('FB SDK load error');
-      postToRN({ success: false, error: 'FB SDK load error' });
+      console.error('[embed.html] FB SDK failed to load');
+      logStatus('FB SDK failed to load');
+      postToRN({ success: false, error: 'sdk_load_failure' });
     }
 
+    // Initialize FB SDK
+    function initFB() {
+      console.log('[embed.html] Initializing FB SDK');
+      logStatus('FB SDK loaded. Initializing...');
+
+      FB.init({
+        appId: APP_ID,
+        autoLogAppEvents: true,
+        xfbml: false,
+        version: 'v23.0'
+      });
+
+      console.log('[embed.html] FB.init complete');
+      logStatus('FB initialized. Launching WhatsApp signup...');
+      launchWhatsAppSignup();
+    }
+
+    // Launch WhatsApp embedded signup
     function launchWhatsAppSignup() {
-      logStatus('Launching Embedded Signup...');
+      console.log('[embed.html] launchWhatsAppSignup started');
+
       FB.login(response => {
-        console.log('FB.login response:', response);
+        console.log('[embed.html] FB.login response:', response);
+
         if (response.status === 'connected') {
-          logStatus('Login succeeded. Waiting for embedded signup...');
+          logStatus('Login successful. Waiting for signup completion...');
         } else {
-          logStatus('Login failed or cancelled.');
-          postToRN({ success: false, error: 'Login failed' });
+          console.error('[embed.html] Login failed or cancelled');
+          logStatus('Login failed or cancelled');
+          postToRN({ success: false, error: 'login_failed', details: response });
         }
       }, {
         config_id: CONFIG_ID,
@@ -60,48 +110,43 @@
         redirect_uri: REDIRECT_URI,
         extras: {
           setup: {},
+          featureType: '',
           sessionInfoVersion: '3'
         }
       });
     }
 
-    window.addEventListener("message", (event) => {
-      console.log('[embed.html] message event received:', event.origin, event.data);
-      let payload;
+    // Handle postMessage from FB embedded signup
+    window.addEventListener('message', (event) => {
+      console.log('[embed.html] Message received from origin:', event.origin);
+
+      if (typeof event.data !== 'string') {
+        console.warn('[embed.html] Ignoring non-string message:', event.data);
+        return;
+      }
+
       try {
-        payload = JSON.parse(event.data);
+        const payload = JSON.parse(event.data);
+        console.log('[embed.html] Parsed payload:', payload);
+
         if (payload.type === 'WA_EMBEDDED_SIGNUP') {
-          logStatus('Signup completed.');
+          logStatus('Signup completed successfully!');
           postToRN({ success: true, data: payload });
-          closeWindowAfterDelay(15);
+          closeAfterSuccess(15);
         } else {
-          console.warn('Unknown message type:', payload.type);
+          console.warn('[embed.html] Unknown payload type:', payload.type);
         }
-      } catch (e) {
-        console.error('Failed to parse message:', e);
+      } catch (err) {
+        console.error('[embed.html] Failed to parse message:', err, event.data);
       }
     });
-
-    function initFB() {
-      logStatus('Initializing FB SDK...');
-      FB.init({
-        appId: APP_ID,
-        version: 'v23.0',
-        xfbml: false
-      });
-      launchWhatsAppSignup();
-    }
   </script>
 
+  <!-- Load FB SDK -->
   <script async defer crossorigin="anonymous"
     src="https://connect.facebook.net/en_US/sdk.js"
     onload="initFB()"
     onerror="onFbSdkError()">
   </script>
-</head>
-
-<body>
-  <h2>WhatsApp Embedded Signup</h2>
-  <div id="status">Loading...</div>
 </body>
 </html>
