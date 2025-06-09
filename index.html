@@ -1,52 +1,102 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>WhatsApp Embedded Signup</title>
-    <script
-      async
-      defer
-      crossorigin="anonymous"
-      src="https://connect.facebook.net/en_US/sdk.js"
-    ></script>
-    <script>
-      // 1) Initialize the FB JS-SDK
-      window.fbAsyncInit = function () {
-        FB.init({
-          appId: "523707793850383", // ← YOUR Facebook App ID
-          version: "v23.0",
-          autoLogAppEvents: true,
-          xfbml: true,
-        });
+<head>
+  <meta charset="utf-8" />
+  <title>WhatsApp Embedded Signup</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    #status { margin-top: 1rem; color: #555; }
+  </style>
 
-        // 2) Launch the Embedded Signup popup
-        FB.WhatsAppEmbeddedSignup.popup({
-          app_id: "523707793850383",
-          scope:
-            "whatsapp_business_management,whatsapp_business_messaging,business_management",
-          // Optionally: line_of_credit_type, language, etc.
-          onSuccess: function (response) {
-            // response = { waba_id, phone_number_id, code, expiration_time }
-            window.ReactNativeWebView.postMessage(
-              JSON.stringify({
-                success: true,
-                data: response,
-              })
-            );
-          },
-          onError: function (error) {
-            window.ReactNativeWebView.postMessage(
-              JSON.stringify({
-                success: false,
-                error: error,
-              })
-            );
-          },
-        });
-      };
-    </script>
-  </head>
-  <body>
-    <p>Loading WhatsApp signup…</p>
-  </body>
+  <!-- 1) Prepare container for FB SDK -->
+  <div id="fb-root"></div>
+
+  <!-- 2) Helper functions -->
+  <script>
+    function logStatus(msg) {
+      console.log('[embed.html]', msg);
+      const el = document.getElementById('status');
+      if (el) el.textContent = msg;
+    }
+    function postToRN(obj) {
+      const str = JSON.stringify(obj);
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(str);
+      } else {
+        console.log('[embed.html] no RN bridge, data:', obj);
+      }
+    }
+    function onFbSdkError() {
+      logStatus('ERROR loading FB SDK');
+      postToRN({ success: false, error: 'FB SDK failed to load' });
+    }
+  </script>
+
+  <!-- 3) Load FB JavaScript SDK -->
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_US/sdk.js"
+    onload="initFB()"
+    onerror="onFbSdkError()">
+  </script>
+
+  <script>
+    const APP_ID    = '523707793850383';
+    const CONFIG_ID = '683389464136204'; // Embedded Signup config ID
+
+    // Called once SDK is loaded
+    function initFB() {
+      logStatus('Initializing FB SDK…');
+      FB.init({
+        appId            : APP_ID,
+        autoLogAppEvents : true,
+        xfbml            : false,
+        version          : 'v23.0'
+      });
+      logStatus('FB SDK initialized. Launching Embedded Signup...');
+      launchWhatsAppSignup();
+    }
+
+    // Listen for the signup result via postMessage
+    window.addEventListener('message', event => {
+      // Only accept messages from Facebook
+      if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) {
+        return;
+      }
+      let data;
+      try { data = JSON.parse(event.data); }
+      catch { return; }
+      // The Embedded Signup payload has type 'WA_EMBEDDED_SIGNUP'
+      if (data.type === 'WA_EMBEDDED_SIGNUP') {
+        logStatus('Signup completed. Sending to React Native…');
+        postToRN({ success: true, data });
+      }
+    });
+
+    // Launch the Embedded Signup flow automatically
+    function launchWhatsAppSignup() {
+      FB.login(response => {
+        if (response.status === 'connected') {
+          logStatus('Login succeeded, awaiting embedded signup…');
+        } else {
+          logStatus('User canceled or login failed');
+          postToRN({ success: false, error: response });
+        }
+      }, {
+        config_id: CONFIG_ID,
+        response_type: 'code',
+        override_default_response_type: true,
+        extras: {
+          setup: {},
+          featureType: '',
+          sessionInfoVersion: '3'
+        }
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <h2>WhatsApp Embedded Signup</h2>
+  <div id="status">Initializing…</div>
+</body>
 </html>
