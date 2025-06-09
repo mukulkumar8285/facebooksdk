@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Signup Callback</title>
+</head>
+<body>
+  <h2>Signup Complete</h2>
+  <div id="result">Reading data…</div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const waba_id = params.get('waba_id');
+    const phone_id = params.get('phone_number_id');
+    const business_id = params.get('business_id');
+    const code = params.get('code');
+
+    const resultEl = document.getElementById('result');
+    resultEl.innerHTML = `
+      <p><strong>WABA ID:</strong> ${waba_id}</p>
+      <p><strong>Phone Number ID:</strong> ${phone_id}</p>
+      <p><strong>Business ID:</strong> ${business_id}</p>
+      <p><strong>Code:</strong> ${code}</p>
+    `;
+    console.log({ waba_id, phone_id, business_id, code });
+  </script>
+</body>
+</html>
