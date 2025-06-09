@@ -76,7 +76,7 @@
     function initFB() {
       console.log('[index.html] initFB called');
       logStatus('Initializing FB SDK…');
-      FB.init({
+      window.FB.init({
         appId            : APP_ID,
         autoLogAppEvents : true,
         xfbml            : false,
@@ -97,7 +97,7 @@
         console.error('[index.html] JSON.parse error:', err, 'data:', event.data);
         return;
       }
-      if (payload.type === 'WA_indexDED_SIGNUP') {
+      if (payload.type === 'WA_EMBEDDED_SIGNUP') {
       //  logStatus('Signup completed. Sending to React Native…');
        // postToRN({ success: true, data: payload });
         redirectWithData(payload);
@@ -108,7 +108,7 @@
 
     function launchWhatsAppSignup() {
       console.log('[index.html] launchWhatsAppSignup called');
-      FB.login(response => {
+      window.FB.login(response => {
         console.log('[index.html] FB.login response:', response);
         if (response.status === 'connected') {
           logStatus('Login succeeded, awaiting indexded signup…');
