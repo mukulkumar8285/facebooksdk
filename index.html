@@ -66,23 +66,19 @@
     // Listen for the signup result via postMessage
     window.addEventListener('message', event => {
       // Only accept messages from Facebook
-      console.log(event, 'this is event')
-      // if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) {
-      //  return;
-      //} 
-      let data;
-      try { data = JSON.parse(event.data);
-        console.log("outside ", data);
-        if (data.type === 'WA_EMBEDDED_SIGNUP') {
-        //logStatus('Signup completed. Sending to React Native…');
-        console.log("inside " , data);
-       postToRN({ success: true, data });
-        
+      if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) {
+        return;
       }
-       }
+      let data;
+      try { 
+        data = JSON.parse(event.data);
+       if (data.type === 'WA_EMBEDDED_SIGNUP') {
+        logStatus('Signup completed. Sending to React Native…');
+        postToRN({ success: true, data });
+      } }
       catch { return; }
       // The Embedded Signup payload has type 'WA_EMBEDDED_SIGNUP'
-
+     
     });
 
     // Launch the Embedded Signup flow automatically
