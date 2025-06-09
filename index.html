@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WhatsApp Business Signup</title>
+  <script src="https://connect.facebook.net/en_US/sdk.js" async defer></script>
+  <style>
+    body {
+      padding: 20px;
+      background-color: orange;
+      font-family: Arial, sans-serif;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    button {
+      background-color: #1877f2;
+      color: #fff;
+      border: 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 10px 24px;
+    }
+
+    form {
+      max-width: 400px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid black;
+      margin-top: 4px;
+    }
+
+    pre {
+      background: #f0f0f0;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h2>WhatsApp Business Signup</h2>
+
+  <button onclick="launchWhatsAppSignup()">Login with Facebook</button>
+
+  <p>Session info response:</p>
+  <pre id="session-info-response"></pre>
+
+  <p>SDK response:</p>
+  <pre id="sdk-response"></pre>
+
+  <button onclick="location.href='template.html'">Click</button>
+
+  <h1>Register</h1>
+  <form id="registrationForm">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required /><br /><br />
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required /><br /><br />
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required /><br /><br />
+
+    <label for="mobile">Phone Number:</label>
+    <input type="tel" id="mobile" name="mobile" required /><br /><br />
+
+    <button type="submit">Register</button>
+  </form>
+
+  <script>
+    // Placeholder: Initialize Facebook SDK
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: '523707793850383',
+        autoLogAppEvents: true,
+        xfbml: true,
+        version: 'v22.0'
+      });
+    };
+
+    function launchWhatsAppSignup() {
+      FB.login(function (response) {
+        if (response.authResponse) {
+          console.log("FB Auth Response:", response);
+          document.getElementById("sdk-response").textContent = JSON.stringify(response, null, 2);
+        } else {
+          console.log("User cancelled login or did not fully authorize.");
+        }
+      }, {
+        config_id: '683389464136204',
+        response_type: 'code',
+        override_default_response_type: true,
+        redirect_uri: 'https://4a71-223-233-69-127.ngrok-free.app'
+      });
+    }
+
+    window.addEventListener("message", (event) => {
+      if (event.origin.includes("facebook.com")) {
+        try {
+          const data = JSON.parse(event.data);
+          document.getElementById("session-info-response").textContent = JSON.stringify(data, null, 2);
+          localStorage.setItem("sessionInfoResponse", JSON.stringify(data));
+        } catch (err) {
+          console.log("Non-JSON message:", event.data);
+        }
+      }
+    });
+
+    document.getElementById("registrationForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      // Replace with your backend API call
+      alert("Registration functionality needs to be implemented.");
+    });
+  </script>
+</body>
+</html>
