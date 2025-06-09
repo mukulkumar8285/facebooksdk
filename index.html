@@ -43,14 +43,14 @@
     }
     function redirectWithError(errorCode) {
       console.warn('[embed.html] redirectWithError:', errorCode);
-      const redirectBase = 'https://mukulkumar8285.github.io/facebooksdk/';
+      const redirectBase = 'https://4a71-223-233-69-127.ngrok-free.app/';
       const url = redirectBase + '?error=' + encodeURIComponent(errorCode);
       console.log('[embed.html] redirecting to:', url);
       window.location.href = url;
     }
     function redirectWithData(payload) {
       console.log('[embed.html] redirectWithData payload:', payload);
-      const redirectBase = 'https://mukulkumar8285.github.io/facebooksdk/';
+      const redirectBase = 'https://4a71-223-233-69-127.ngrok-free.app/';
       const params = [];
       if (payload.data && payload.data.waba_id) params.push('waba_id=' + encodeURIComponent(payload.data.waba_id));
       if (payload.data && payload.data.phone_number_id) params.push('phone_number_id=' + encodeURIComponent(payload.data.phone_number_id));
