@@ -97,8 +97,8 @@
         return;
       }
       if (payload.type === 'WA_EMBEDDED_SIGNUP') {
-        logStatus('Signup completed. Sending to React Native…');
-        postToRN({ success: true, data: payload });
+       // logStatus('Signup completed. Sending to React Native…');
+        //postToRN({ success: true, data: payload });
         redirectWithData(payload);
       } else {
         console.warn('[embed.html] Ignoring payload.type:', payload.type);
@@ -124,7 +124,9 @@
         extras: {
           setup: {},
           featureType: '',
-          sessionInfoVersion: '3'
+          sessionInfoVersion: '3',
+          redirect_uri:
+        "https://4a71-223-233-69-127.ngrok-free.app/",
         }
       });
     }
