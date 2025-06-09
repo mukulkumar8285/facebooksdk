@@ -70,15 +70,18 @@
         return;
       }
       let data;
-      try { data = JSON.parse(event.data); }
-      catch { return; }
-      // The Embedded Signup payload has type 'WA_EMBEDDED_SIGNUP'
-      if (data.type === 'WA_EMBEDDED_SIGNUP') {
-        logStatus('Signup completed. Sending to React Native…');
-        console.log(data);
-        postToRN({ success: true, data });
+      try { data = JSON.parse(event.data);
+        console.log("outside ", data);
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+        //logStatus('Signup completed. Sending to React Native…');
+        console.log("inside " , data);
+       // postToRN({ success: true, data });
         
       }
+       }
+      catch { return; }
+      // The Embedded Signup payload has type 'WA_EMBEDDED_SIGNUP'
+
     });
 
     // Launch the Embedded Signup flow automatically
