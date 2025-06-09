@@ -1,28 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Signup Callback</title>
+  <meta charset="UTF-8" />
+  <title>WhatsApp Signup Callback</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 1rem;
+      border-radius: 5px;
+      text-align: left;
+      overflow-x: auto;
+    }
+  </style>
 </head>
 <body>
-  <h2>Signup Complete</h2>
-  <div id="result">Reading data…</div>
+  <h2>WhatsApp Signup Callback</h2>
+  <div id="result">Processing response...</div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const waba_id = params.get('waba_id');
-    const phone_id = params.get('phone_number_id');
-    const business_id = params.get('business_id');
-    const code = params.get('code');
+    // Parse URL parameters (code, state, error, etc.)
+    function getQueryParams() {
+      const params = {};
+      location.search.substring(1).split("&").forEach(pair => {
+        if (pair) {
+          const [key, value] = pair.split("=");
+          params[decodeURIComponent(key)] = decodeURIComponent(value || "");
+        }
+      });
+      return params;
+    }
+
+    const params = getQueryParams();
 
     const resultEl = document.getElementById('result');
-    resultEl.innerHTML = `
-      <p><strong>WABA ID:</strong> ${waba_id}</p>
-      <p><strong>Phone Number ID:</strong> ${phone_id}</p>
-      <p><strong>Business ID:</strong> ${business_id}</p>
-      <p><strong>Code:</strong> ${code}</p>
-    `;
-    console.log({ waba_id, phone_id, business_id, code });
+
+    if (params.error) {
+      resultEl.innerHTML = `<p style="color: red;">Error: ${params.error}</p>`;
+      console.error("Signup failed:", params);
+    } else if (params.code) {
+      console.log("Success! Received code:", params.code);
+      resultEl.innerHTML = `<p style="color: green;">Signup successful!</p>` +
+        `<h3>Received Data:</h3>` +
+        `<pre>${JSON.stringify(params, null, 2)}</pre>`;
+    } else {
+      resultEl.innerHTML = `<p>No valid data received.</p>`;
+      console.warn("No code or error parameter found.");
+    }
   </script>
 </body>
 </html>
