@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>WhatsApp indexded Signup</title>
+  <title>WhatsApp Embedded Signup</title>
   <style>
     body { font-family: sans-serif; padding: 1rem; }
     #status { margin-top: 1rem; color: #555; }
@@ -13,9 +13,9 @@
 
   <!-- Override window.open to force same-window navigation -->
   <script>
-    console.log('[index.html] Override window.open');
+    console.log('[embed.html] Override window.open');
     window.open = function(url) {
-      console.log('[index.html] window.open called, navigating to:', url);
+      console.log('[embed.html] window.open called, navigating to:', url);
       window.location.href = url;
     };
   </script>
@@ -23,33 +23,33 @@
   <!-- Helper functions -->
   <script>
     function logStatus(msg) {
-      console.log('[index.html] STATUS:', msg);
+      console.log('[embed.html] STATUS:', msg);
       const el = document.getElementById('status');
       if (el) el.textContent = msg;
     }
     function postToRN(obj) {
       const str = JSON.stringify(obj);
-      console.log('[index.html] postToRN data:', obj);
+      console.log('[embed.html] postToRN data:', obj);
       if (window.ReactNativeWebView) {
         window.ReactNativeWebView.postMessage(str);
-        console.log('[index.html] postMessage sent to RN');
+        console.log('[embed.html] postMessage sent to RN');
       }
     }
     function onFbSdkError() {
-      console.error('[index.html] ERROR loading FB SDK');
+      console.error('[embed.html] ERROR loading FB SDK');
       logStatus('ERROR loading FB SDK');
       postToRN({ success: false, error: 'FB SDK failed to load' });
       redirectWithError('sdk_error');
     }
     function redirectWithError(errorCode) {
-      console.warn('[index.html] redirectWithError:', errorCode);
+      console.warn('[embed.html] redirectWithError:', errorCode);
       const redirectBase = 'https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ';
       const url = redirectBase + '?error=' + encodeURIComponent(errorCode);
-      console.log('[index.html] redirecting to:', url);
+      console.log('[embed.html] redirecting to:', url);
       window.location.href = url;
     }
     function redirectWithData(payload) {
-      console.log('[index.html] redirectWithData payload:', payload);
+      console.log('[embed.html] redirectWithData payload:', payload);
       const redirectBase = 'https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ';
       const params = [];
       const data = payload.data || {};
@@ -57,7 +57,7 @@
       if (data.phone_number_id) params.push('phone_number_id=' + encodeURIComponent(data.phone_number_id));
       if (payload.code || data.code) params.push('code=' + encodeURIComponent(payload.code || data.code));
       const url = redirectBase + (params.length ? ('?' + params.join('&')) : '');
-      console.log('[index.html] redirecting with data to:', url);
+      console.log('[embed.html] redirecting with data to:', url);
       window.location.href = url;
     }
   </script>
@@ -65,8 +65,8 @@
   <!-- Load FB JavaScript SDK -->
   <script async defer crossorigin="anonymous"
     src="https://connect.facebook.net/en_US/sdk.js"
-    onload=initFB()
-    onerror=onFbSdkError()>
+    onload="initFB()"
+    onerror="onFbSdkError()">
   </script>
 
   <script>
@@ -74,46 +74,46 @@
     const CONFIG_ID = '683389464136204';
 
     function initFB() {
-      console.log('[index.html] initFB called');
+      console.log('[embed.html] initFB called');
       logStatus('Initializing FB SDK…');
-      window.FB.init({
+      FB.init({
         appId            : APP_ID,
         autoLogAppEvents : true,
         xfbml            : false,
         version          : 'v23.0'
       });
-      console.log('[index.html] FB.init complete');
-      logStatus('FB SDK initialized. Launching indexded Signup...');
+      console.log('[embed.html] FB.init complete');
+      logStatus('FB SDK initialized. Launching Embedded Signup...');
       launchWhatsAppSignup();
     }
 
     window.addEventListener('message', event => {
-      console.log('[index.html] message event received from origin:', event.origin);
+      console.log('[embed.html] message event received from origin:', event.origin);
       let payload;
       try {
         payload = JSON.parse(event.data);
-        console.log('[index.html] parsed payload:', payload);
+        console.log('[embed.html] parsed payload:', payload);
       } catch (err) {
-        console.error('[index.html] JSON.parse error:', err, 'data:', event.data);
+        console.error('[embed.html] JSON.parse error:', err, 'data:', event.data);
         return;
       }
       if (payload.type === 'WA_EMBEDDED_SIGNUP') {
-      //  logStatus('Signup completed. Sending to React Native…');
-       // postToRN({ success: true, data: payload });
+        logStatus('Signup completed. Sending to React Native…');
+        postToRN({ success: true, data: payload });
         redirectWithData(payload);
       } else {
-        console.warn('[index.html] Ignoring payload.type:', payload.type);
+        console.warn('[embed.html] Ignoring payload.type:', payload.type);
       }
     });
 
     function launchWhatsAppSignup() {
-      console.log('[index.html] launchWhatsAppSignup called');
-      window.FB.login(response => {
-        console.log('[index.html] FB.login response:', response);
+      console.log('[embed.html] launchWhatsAppSignup called');
+      FB.login(response => {
+        console.log('[embed.html] FB.login response:', response);
         if (response.status === 'connected') {
-          logStatus('Login succeeded, awaiting indexded signup…');
+          logStatus('Login succeeded, awaiting embedded signup…');
         } else {
-          console.error('[index.html] User canceled or login failed', response);
+          console.error('[embed.html] User canceled or login failed', response);
           logStatus('User canceled or login failed');
           postToRN({ success: false, error: response });
           redirectWithError('user_canceled');
@@ -122,20 +122,20 @@
         config_id: CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
-        <!-- extras: {
+        redirect_uri:
+        "https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ",
+        extras: {
           setup: {},
           featureType: '',
           sessionInfoVersion: '3'
-        } -->
-          redirect_uri:
-        "https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ",
+        }
       });
     }
   </script>
 </head>
 
 <body>
-  <h2>WhatsApp indexded Signup</h2>
+  <h2>WhatsApp Embedded Signup</h2>
   <div id="status">Initializing…</div>
 </body>
 </html>
