@@ -66,9 +66,10 @@
     // Listen for the signup result via postMessage
     window.addEventListener('message', event => {
       // Only accept messages from Facebook
-      if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) {
-        return;
-      }
+      console.log(event, 'this is event')
+      // if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) {
+      //  return;
+      //} 
       let data;
       try { data = JSON.parse(event.data);
         console.log("outside ", data);
