@@ -43,18 +43,19 @@
     }
     function redirectWithError(errorCode) {
       console.warn('[index.html] redirectWithError:', errorCode);
-      const redirectBase = 'https://4a71-223-233-69-127.ngrok-free.app/';
+      const redirectBase = 'https://mukulkumar8285.github.io/facebooksdk/';
       const url = redirectBase + '?error=' + encodeURIComponent(errorCode);
       console.log('[index.html] redirecting to:', url);
       window.location.href = url;
     }
     function redirectWithData(payload) {
       console.log('[index.html] redirectWithData payload:', payload);
-      const redirectBase = 'https://4a71-223-233-69-127.ngrok-free.app/';
+      const redirectBase = 'https://mukulkumar8285.github.io/facebooksdk/';
       const params = [];
-      if (payload.data && payload.data.waba_id) params.push('waba_id=' + encodeURIComponent(payload.data.waba_id));
-      if (payload.data && payload.data.phone_number_id) params.push('phone_number_id=' + encodeURIComponent(payload.data.phone_number_id));
-      if (payload.data && payload.data.code) params.push('code=' + encodeURIComponent(payload.data.code));
+      const data = payload.data || {};
+      if (data.waba_id) params.push('waba_id=' + encodeURIComponent(data.waba_id));
+      if (data.phone_number_id) params.push('phone_number_id=' + encodeURIComponent(data.phone_number_id));
+      if (payload.code || data.code) params.push('code=' + encodeURIComponent(payload.code || data.code));
       const url = redirectBase + (params.length ? ('?' + params.join('&')) : '');
       console.log('[index.html] redirecting with data to:', url);
       window.location.href = url;
@@ -97,8 +98,8 @@
         return;
       }
       if (payload.type === 'WA_indexDED_SIGNUP') {
-       // logStatus('Signup completed. Sending to React Native…');
-        //postToRN({ success: true, data: payload });
+        logStatus('Signup completed. Sending to React Native…');
+        postToRN({ success: true, data: payload });
         redirectWithData(payload);
       } else {
         console.warn('[index.html] Ignoring payload.type:', payload.type);
@@ -124,9 +125,7 @@
         extras: {
           setup: {},
           featureType: '',
-          sessionInfoVersion: '3',
-          redirect_uri:
-        "https://4a71-223-233-69-127.ngrok-free.app/",
+          sessionInfoVersion: '3'
         }
       });
     }
