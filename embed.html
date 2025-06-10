@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
   <title>WhatsApp Embedded Signup</title>
   <style>
     body { font-family: sans-serif; padding: 1rem; }
@@ -10,60 +10,77 @@
 
   <!-- 1. Load the Facebook JS SDK -->
   <script async defer crossorigin="anonymous"
-    src="https://connect.facebook.net/en_US/sdk.js"
+    src="https://connect.facebook.net/en_US/sdk.js#version=v23.0&xfbml=0"
     onload="onFbSdkLoad()"
     onerror="onFbSdkError()">
   </script>
 
   <script>
-    // Utility to update the page and console
+    // Update page & console
     function logStatus(msg) {
       console.log('[embed.html]', msg);
       document.getElementById('status').textContent = msg;
     }
 
-    // Called if the SDK fails to load
+    // Fallback reporter
+    function postToHost(obj) {
+      const json = JSON.stringify(obj);
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(json);
+      } else if (window.opener) {
+        window.opener.postMessage(json, '*');
+      }
+    }
+
+    // 2. SDK load error
     function onFbSdkError() {
-      logStatus('ERROR: Could not load FB SDK.');
+      logStatus('ERROR: Could not load Facebook SDK.');
       postToHost({ success: false, error: 'FB SDK failed to load' });
     }
 
-    // Called once the FB SDK has loaded
+    // 3. SDK loaded
     function onFbSdkLoad() {
       logStatus('FB SDK loaded — initializing...');
       FB.init({
-        appId   : '523707793850383',    // ← YOUR Facebook App ID
-        version : 'v23.0'
+        appId      : '523707793850383',  // ← your App ID
+        version    : 'v23.0',
+        xfbml      : false,
+        status     : false,
       });
-      logStatus('FB initialized — launching Embedded Signup...');
-      
+
+      logStatus('FB.init done — waiting for EmbeddedSignup plugin...');
+      // Poll for the plugin to become available
+      let tries = 0;
+      const maxTries = 20;
+      const interval = setInterval(() => {
+        if (FB.WhatsAppEmbeddedSignup && typeof FB.WhatsAppEmbeddedSignup.popup === 'function') {
+          clearInterval(interval);
+          launchSignup();
+        } else if (++tries >= maxTries) {
+          clearInterval(interval);
+          logStatus('ERROR: EmbeddedSignup plugin unavailable.');
+          postToHost({ success: false, error: 'EmbeddedSignup plugin unavailable' });
+        } else {
+          logStatus(`Waiting for plugin… (${tries}/${maxTries})`);
+        }
+      }, 500);
+    }
+
+    // 4. Launch the actual signup
+    function launchSignup() {
+      logStatus('Launching WhatsApp Embedded Signup…');
       FB.WhatsAppEmbeddedSignup.popup({
-        app_id       : '523707793850383',  
-        scope        : 'whatsapp_business_management,whatsapp_business_messaging,business_management',
-        // Optional: line_of_credit_type, sessionInfoVersion, language, etc.
+        app_id    : '523707793850383',
+        scope     : 'whatsapp_business_management,whatsapp_business_messaging,business_management',
         onSuccess(response) {
-          // response = { waba_id, phone_number_id, code, expiration_time }
-          logStatus('Signup success — posting to host.');
+          logStatus('Signup success — posting data.');
           postToHost({ success: true, data: response });
         },
         onError(error) {
-          logStatus('Signup error — posting to host.');
+          logStatus('Signup error — posting error.');
           postToHost({ success: false, error: error });
         }
       });
-    }
-
-    // Send message back to the parent (WebView or window.opener)
-    function postToHost(payload) {
-      const json = JSON.stringify(payload);
-      // React Native WebView
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(json);
-      }
-      // Desktop/mobile web: parent window
-      else if (window.opener) {
-        window.opener.postMessage(json, '*');
-      }
     }
   </script>
 </head>
