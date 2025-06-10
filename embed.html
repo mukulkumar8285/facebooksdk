@@ -27,8 +27,11 @@
 
   <script>
     // wrapper for RN postMessage
-    function postToReactNative(payload) {
+    function postToHost(payload) {
+      // RN
       window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+      // our own postMessage listener
+      window.postMessage(JSON.stringify(payload), '*');
     }
 
     window.fbAsyncInit = function() {
@@ -56,7 +59,7 @@
 
           if (data.event === 'FINISH') {
             const { phone_number_id, waba_id } = data.data;
-            postToReactNative(data)
+            postToHost(data)
             // setPhoneNumberId(phone_number_id);
             // setWabaId(waba_id);
             console.log('Phone number ID:', phone_number_id);
