@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>WhatsApp Embedded Signup</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    #status { margin-top: 1rem; color: #555; }
+  </style>
+
+  <!-- 1. Load the Facebook JS SDK -->
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_US/sdk.js"
+    onload="onFbSdkLoad()"
+    onerror="onFbSdkError()">
+  </script>
+
+  <script>
+    // Utility to update the page and console
+    function logStatus(msg) {
+      console.log('[embed.html]', msg);
+      document.getElementById('status').textContent = msg;
+    }
+
+    // Called if the SDK fails to load
+    function onFbSdkError() {
+      logStatus('ERROR: Could not load FB SDK.');
+      postToHost({ success: false, error: 'FB SDK failed to load' });
+    }
+
+    // Called once the FB SDK has loaded
+    function onFbSdkLoad() {
+      logStatus('FB SDK loaded — initializing...');
+      FB.init({
+        appId   : '523707793850383',    // ← YOUR Facebook App ID
+        version : 'v23.0'
+      });
+      logStatus('FB initialized — launching Embedded Signup...');
+      
+      FB.WhatsAppEmbeddedSignup.popup({
+        app_id       : '523707793850383',  
+        scope        : 'whatsapp_business_management,whatsapp_business_messaging,business_management',
+        // Optional: line_of_credit_type, sessionInfoVersion, language, etc.
+        onSuccess(response) {
+          // response = { waba_id, phone_number_id, code, expiration_time }
+          logStatus('Signup success — posting to host.');
+          postToHost({ success: true, data: response });
+        },
+        onError(error) {
+          logStatus('Signup error — posting to host.');
+          postToHost({ success: false, error: error });
+        }
+      });
+    }
+
+    // Send message back to the parent (WebView or window.opener)
+    function postToHost(payload) {
+      const json = JSON.stringify(payload);
+      // React Native WebView
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(json);
+      }
+      // Desktop/mobile web: parent window
+      else if (window.opener) {
+        window.opener.postMessage(json, '*');
+      }
+    }
+  </script>
+</head>
+<body>
+  <h2>WhatsApp Embedded Signup</h2>
+  <div id="status">Loading Facebook JS-SDK…</div>
+</body>
+</html>
