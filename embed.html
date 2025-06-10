@@ -1,97 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>WhatsApp Embedded Signup</title>
   <style>
     body { font-family: sans-serif; padding: 1rem; }
-    #status { margin-top: 1rem; color: #555; }
-    button { background-color: #1877f2; border: 0; border-radius: 4px; color: #fff;
-              cursor: pointer; font-family: Helvetica, Arial, sans-serif;
-              font-size: 16px; font-weight: bold; height: 40px; padding: 0 24px; }
+    button {
+      background-color: #1877f2;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      height: 40px;
+      padding: 0 24px;
+    }
   </style>
-
-  <!-- SDK loading -->
   <script async defer crossorigin="anonymous"
     src="https://connect.facebook.net/en_US/sdk.js">
   </script>
 </head>
 <body>
   <h2>WhatsApp Embedded Signup</h2>
-  <div id="status">Initializing...</div>
   <button id="launch-btn">Connect WhatsApp</button>
 
   <script>
-    // Utility to log status
-    function logStatus(msg) {
-      console.log('[embed]', msg);
-      document.getElementById('status').textContent = msg;
+    // wrapper for RN postMessage
+    function postToReactNative(payload) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(payload));
     }
 
-    // post message to host (WebView or opener)
-    function postToHost(payload) {
-      const json = JSON.stringify(payload);
-      window.postMessage(json)
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(json);
-      } else if (window.opener) {
-        window.opener.postMessage(json, '*');
-      }
-    }
-
-    // SDK initialization
     window.fbAsyncInit = function() {
       FB.init({
-        appId            : '523707793850383',  // YOUR_APP_ID
-        autoLogAppEvents : true,
+        appId            : '523707793850383',
+        version          : 'v23.0',
         xfbml            : false,
-        version          : 'v23.0'
+        autoLogAppEvents : true
       });
-      logStatus('FB SDK initialized');
     };
 
-    // Listen for embedded signup messages
-    window.addEventListener('message', function(event) {
-      logStatus('Message received: ' + event.origin);
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'WA_EMBEDDED_SIGNUP') {
-          logStatus('Embedded signup event');
-          postToHost({ success: true, data });
-        }
-      } catch (e) {
-        console.log('[embed] Non-JSON message or not relevant', event.data);
-      }
-    });
-
-    // Response callback from FB.login
     function fbLoginCallback(response) {
       if (response.authResponse && response.authResponse.code) {
-        const code = response.authResponse.code;
-        logStatus('Received code: ' + code);
-        postToHost({ success: true, data: { code } });
+        // **This** is the only time we ever post back to RN:
+        postToReactNative({
+          success: true,
+          waba_id:   response.authResponse.business_id,        // example field
+          phone_number_id: response.authResponse.phone_number_id,
+          token: response.authResponse.access_token            // the “exchangeable token”
+        });
       } else {
-        logStatus('Login failed or denied');
-        postToHost({ success: false, error: response });
+        postToReactNative({ success: false, error: response });
       }
     }
 
-    // Launch method
-    function launchWhatsAppSignup() {
-      logStatus('Launching WhatsApp signup');
-      FB.login(fbLoginCallback, {
-        config_id               : '683389464136204',  // YOUR_CONFIG_ID
-        response_type           : 'code',
-        override_default_response_type: true,
-        extras: {
-          setup              : {},
-          featureType        : 'signup',
-          sessionInfoVersion : '3'
-        }
+    document.getElementById('launch-btn')
+      .addEventListener('click', () => {
+        FB.login(fbLoginCallback, {
+          config_id                     : '683389464136204',
+          response_type                 : 'code',
+          override_default_response_type: true,
+        });
       });
-    }
-
-    document.getElementById('launch-btn').addEventListener('click', launchWhatsAppSignup);
   </script>
 </body>
 </html>
