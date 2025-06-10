@@ -40,17 +40,30 @@
       });
     };
 
+      window.addEventListener('message', function(event) {
+      logStatus('Message received: ' + event.origin);
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          logStatus('Embedded signup event');
+          postToReactNative(data);
+        }
+      } catch (e) {
+        console.log('[embed] Non-JSON message or not relevant', event.data);
+      }
+    })
+
     function fbLoginCallback(response) {
       if (response.authResponse && response.authResponse.code) {
         // **This** is the only time we ever post back to RN:
-        postToReactNative({
-          success: true,
-          waba_id:   response.authResponse.business_id,        // example field
-          phone_number_id: response.authResponse.phone_number_id,
-          token: response.authResponse.access_token            // the “exchangeable token”
-        });
+        // postToReactNative({
+        //   success: true,
+        //   waba_id:   response.authResponse.business_id,        // example field
+        //   phone_number_id: response.authResponse.phone_number_id,
+        //   token: response.authResponse.access_token            // the “exchangeable token”
+        // });
       } else {
-        postToReactNative({ success: false, error: response });
+        // postToReactNative({ success: false, error: response });
       }
     }
 
