@@ -45,6 +45,7 @@
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'WA_EMBEDDED_SIGNUP') {
+            console.log(data, 'data================>')
           logStatus('Embedded signup event');
           postToReactNative(data);
         }
