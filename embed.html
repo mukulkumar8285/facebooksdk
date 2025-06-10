@@ -42,16 +42,38 @@
 
       window.addEventListener('message', function(event) {
         console.log(event, 'event=============>')
+      if (
+        event.origin !== 'https://www.facebook.com' &&
+        event.origin !== 'https://web.facebook.com'
+      ) {
+        return;
+      }
+
       try {
         const data = JSON.parse(event.data);
+        console.log(data, 'data=========>')
         if (data.type === 'WA_EMBEDDED_SIGNUP') {
-            console.log(data, 'data================>')
-       
-          postToReactNative(data);
+
+          if (data.event === 'FINISH') {
+            const { phone_number_id, waba_id } = data.data;
+            postToReactNative(data)
+            // setPhoneNumberId(phone_number_id);
+            // setWabaId(waba_id);
+            console.log('Phone number ID:', phone_number_id);
+            console.log('WABA ID:', waba_id);
+          } else if (data.event === 'CANCEL') {
+            console.warn('User cancelled at step:', data.data.current_step);
+          } else if (data.event === 'ERROR') {
+            console.error('Signup error:', data.data.error_message);
+          }
         }
+
+       
       } catch (e) {
-        console.log('[embed] Non-JSON message or not relevant', event.data);
-      }
+        console.log('Non-JSON message received:', event.data);
+      }
+
+      
     })
 
     function fbLoginCallback(response) {
