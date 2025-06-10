@@ -50,26 +50,27 @@
 
       logStatus('FB.init done — waiting for EmbeddedSignup plugin...');
       // Poll for the plugin to become available
-      let tries = 0;
-      const maxTries = 20;
-      const interval = setInterval(() => {
-        if (FB.WhatsAppEmbeddedSignup && typeof FB.WhatsAppEmbeddedSignup.popup === 'function') {
-          clearInterval(interval);
-          launchSignup();
-        } else if (++tries >= maxTries) {
-          clearInterval(interval);
-          logStatus('ERROR: EmbeddedSignup plugin unavailable.');
-          postToHost({ success: false, error: 'EmbeddedSignup plugin unavailable' });
-        } else {
-          logStatus(`Waiting for plugin… (${tries}/${maxTries})`);
-        }
-      }, 500);
+      launchSignup();
+    //   let tries = 0;
+    //   const maxTries = 20;
+    //   const interval = setInterval(() => {
+    //     if (FB.WhatsAppEmbeddedSignup && typeof FB.WhatsAppEmbeddedSignup.popup === 'function') {
+    //       clearInterval(interval);
+    //       launchSignup();
+    //     } else if (++tries >= maxTries) {
+    //       clearInterval(interval);
+    //       logStatus('ERROR: EmbeddedSignup plugin unavailable.');
+    //       postToHost({ success: false, error: 'EmbeddedSignup plugin unavailable' });
+    //     } else {
+    //       logStatus(`Waiting for plugin… (${tries}/${maxTries})`);
+    //     }
+    //   }, 500);
     }
 
     // 4. Launch the actual signup
     function launchSignup() {
       logStatus('Launching WhatsApp Embedded Signup…');
-      FB.WhatsAppEmbeddedSignup.popup({
+      FB.login({
         app_id    : '523707793850383',
         scope     : 'whatsapp_business_management,whatsapp_business_messaging,business_management',
         onSuccess(response) {
