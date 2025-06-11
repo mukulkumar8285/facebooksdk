@@ -29,9 +29,9 @@
     // wrapper for RN postMessage
     function postToHost(payload) {
       // RN
-      window.ReactNativeWebView.postMessage(JSON.stringify(payload));
-      // our own postMessage listener
-      window.postMessage(JSON.stringify(payload), '*');
+    //   window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+    //   // our own postMessage listener
+    //   window.postMessage(JSON.stringify(payload), '*');
     }
 
     window.fbAsyncInit = function() {
@@ -99,6 +99,7 @@
           config_id                     : '683389464136204',
           response_type                 : 'code',
           override_default_response_type: true,
+          redirect_uri: window.location.href
         });
       });
   </script>
