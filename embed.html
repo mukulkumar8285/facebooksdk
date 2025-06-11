@@ -101,8 +101,10 @@
           override_default_response_type: true,
           redirect_uri: window.location.href,
               extras: {
-     setup: {},                        // required (even if empty)
-     feature: "whatsapp_embedded_signup",
+     setup: {
+        solutionID: '683389464136204'
+     },                        // required (even if empty)
+  
      featureType: 'signup',            // tells the SDK which flow
      sessionInfoVersion: '3'           // current version
    },
