@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -104,4 +104,139 @@
       });
   </script>
 </body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>WhatsApp Embedded Signup</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    #status { margin-top: 1rem; color: #555; }
+    button {
+      background-color: #1877f2;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      height: 40px;
+      padding: 0 24px;
+    }
+  </style>
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_US/sdk.js">
+  </script>
+</head>
+<body>
+  <h2>WhatsApp Embedded Signup</h2>
+  <div id="status">Initializing...</div>
+  <button id="launch-btn">Connect WhatsApp</button>
+
+  <script>
+    // 1) Helper to log status
+    function logStatus(msg) {
+      document.getElementById('status').textContent = msg;
+      console.log('[embed]', msg);
+    }
+
+    // 2) Send payload to React Native AND to window.postMessage (for your SDK logs)
+    function postToHost(payload) {
+      const json = JSON.stringify(payload);
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(json);
+      }
+      // also trigger any page-level listeners
+      window.postMessage(json, '*');
+    }
+
+    // 3) Initialize the FB JS SDK
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId            : '523707793850383',
+        version          : 'v23.0',
+        xfbml            : false,
+        autoLogAppEvents : true
+      });
+      logStatus('FB SDK initialized');
+    };
+
+    // 4) Listen for the embedded-signup events from FB SDK
+    window.addEventListener('message', function(event) {
+      // only trust FB-originated messages:
+    //   if (
+    //     event.origin !== 'https://www.facebook.com' &&
+    //     event.origin !== 'https://web.facebook.com'
+    //   ) return;
+
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch (e) {
+        console.log('[embed] Non-JSON:', event.data);
+        return;
+      }
+
+      if (data.type !== 'WA_EMBEDDED_SIGNUP') return;
+
+      logStatus(`SDK event: ${data.event}`);
+
+      switch (data.event) {
+        case 'SUCCESS':
+          // FB SDK docs say data.data will contain the three values:
+          const {
+            waba_id,
+            phone_number_id,
+            exchangeable_token: token
+          } = data.data;
+
+          logStatus('Signup succeeded');
+          postToHost({
+            success: true,
+            waba_id,
+            phone_number_id,
+            token
+          });
+          break;
+
+        case 'CANCEL':
+          logStatus('User cancelled');
+          postToHost({ success: false, error: 'User cancelled' });
+          break;
+
+        case 'ERROR':
+          logStatus('Signup error');
+          postToHost({ success: false, error: data.data.error_message });
+          break;
+
+        default:
+          // other lifecycle events: e.g. 'START', 'LOADING', etc.
+          break;
+      }
+    });
+
+    // 5) Kick off the embedded signup flow
+    document.getElementById('launch-btn').addEventListener('click', () => {
+      logStatus('Launching embedded signup');
+      FB.login(
+        /* callback is ignored—FB SDK will emit embedded-signup messages */
+        () => {},
+        {
+          config_id                       : '683389464136204',
+          response_type                   : 'code',
+          override_default_response_type  : true,
+          extras: {
+            featureType        : 'signup',
+            sessionInfoVersion : '3'
+          }
+        }
+      );
+    });
+  </script>
+</body>
 </html>
+
