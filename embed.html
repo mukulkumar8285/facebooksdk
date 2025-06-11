@@ -38,7 +38,7 @@
       FB.init({
         appId            : '523707793850383',
         version          : 'v23.0',
-        xfbml            : false,
+        xfbml            : true,
         autoLogAppEvents : true
       });
     };
@@ -102,6 +102,7 @@
           redirect_uri: window.location.href,
               extras: {
      setup: {},                        // required (even if empty)
+     feature: "whatsapp_embedded_signup",
      featureType: 'signup',            // tells the SDK which flow
      sessionInfoVersion: '3'           // current version
    },
