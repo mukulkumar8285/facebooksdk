@@ -27,10 +27,10 @@
 
     // Replace window.open to force same-window redirect
     console.log('[embed.html] Overriding window.open');
-    // window.open = function (url) {
-    //   console.log('[embed.html] window.open intercepted, redirecting to:', url);
-    //   window.location.href = url;
-    // };
+    window.open = function (url) {
+      console.log('[embed.html] window.open intercepted, redirecting to:', url);
+      window.location.href = url;
+    };
 
     // Helper to log status on screen and console
     function logStatus(msg) {
