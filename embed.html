@@ -18,7 +18,7 @@
     }
   </style>
   <script async defer crossorigin="anonymous"
-    src="https://connect.facebook.net/en_US/sdk.js" onload="initFB()">
+    src="https://connect.facebook.net/en_US/sdk.js">
   </script>
 </head>
 <body>
@@ -99,6 +99,22 @@
         // postToReactNative({ success: false, error: response });
       }
     }
+
+      // Wait for FB SDK to load
+    window.addEventListener('load', function() {
+      if (window.FB) {
+        initFB();
+      } else {
+        // Poll until FB is available
+        var fbPoll = setInterval(function() {
+          if (window.FB) {
+            clearInterval(fbPoll);
+            initFB();
+          }
+        }, 50);
+      }
+    });
+
 
     function launchWhatsAppSignup(){
        FB.login(fbLoginCallback, {
