@@ -34,7 +34,8 @@
     //   window.postMessage(JSON.stringify(payload), '*');
     }
 
-    window.fbAsyncInit = function() {
+    function initFB(){
+       window.fbAsyncInit = function() {
       FB.init({
         appId            : '523707793850383',
         version          : 'v23.0',
@@ -42,6 +43,11 @@
         autoLogAppEvents : true
       });
     };
+
+    launchWhatsAppSignup()
+
+    }
+   
 
       window.addEventListener('message', function(event) {
         console.log(event, 'addEventListener===>')
@@ -94,7 +100,7 @@
       }
     }
 
-    function initFB(){
+    function launchWhatsAppSignup(){
        FB.login(fbLoginCallback, {
           config_id                     : '683389464136204',
           response_type                 : 'code',
