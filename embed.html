@@ -18,12 +18,12 @@
     }
   </style>
   <script async defer crossorigin="anonymous"
-    src="https://connect.facebook.net/en_US/sdk.js">
+    src="https://connect.facebook.net/en_US/sdk.js" onload="initFB()">
   </script>
 </head>
 <body>
-  <h2>WhatsApp Embedded Signup</h2>
-  <button id="launch-btn">Connect WhatsApp</button>
+  <!-- <h2>WhatsApp Embedded Signup</h2>
+  <button id="launch-btn">Connect WhatsApp</button> -->
 
   <script>
     // wrapper for RN postMessage
@@ -94,9 +94,8 @@
       }
     }
 
-    document.getElementById('launch-btn')
-      .addEventListener('click', () => {
-        FB.login(fbLoginCallback, {
+    function initFB(){
+       FB.login(fbLoginCallback, {
           config_id                     : '683389464136204',
           response_type                 : 'code',
           override_default_response_type: true,
@@ -110,7 +109,11 @@
      sessionInfoVersion: '3'           // current version
    },
         });
-      });
+    }
+    // document.getElementById('launch-btn')
+    //   .addEventListener('click', () => {
+       
+    //   });
   </script>
 </body>
 </html>
