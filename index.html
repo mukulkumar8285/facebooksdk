@@ -107,10 +107,10 @@
         config_id: CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
-        redirect_uri: REDIRECT_URI,
+        redirect_uri: window.location.href,
         extras: {
           setup: {},
-          featureType: '',
+          featureType: 'signup',
           sessionInfoVersion: '3'
         }
       });
