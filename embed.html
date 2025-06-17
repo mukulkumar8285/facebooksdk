@@ -17,9 +17,9 @@
       padding: 0 24px;
     }
   </style>
-  <script async defer crossorigin="anonymous"
+  <!-- <script async defer crossorigin="anonymous"
     src="https://connect.facebook.net/en_US/sdk.js" onload="initFB()">
-  </script>
+  </script> -->
 </head>
 <body>
   <!-- <h2>WhatsApp Embedded Signup</h2>
@@ -99,6 +99,24 @@
         // postToReactNative({ success: false, error: response });
       }
     }
+
+     // Dynamically load FB SDK
+    (function loadAndInitFB() {
+      var script = document.createElement('script');
+      script.src = 'https://connect.facebook.net/en_US/sdk.js';
+      script.async = true;
+      script.defer = true;
+      script.onload = initFB;
+      document.head.appendChild(script);
+
+      // Fallback polling in case onload isn't fired
+      var poll = setInterval(function() {
+        if (window.FB) {
+          clearInterval(poll);
+          initFB();
+        }
+      }, 100);
+    })();
 
     function launchWhatsAppSignup(){
        FB.login(fbLoginCallback, {
