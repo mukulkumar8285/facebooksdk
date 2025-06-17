@@ -34,9 +34,9 @@
     //   window.postMessage(JSON.stringify(payload), '*');
     }
 
-    function initFB(){
+   async function initFB(){
       //  window.fbAsyncInit = function() {
-      FB.init({
+    await FB.init({
         appId            : '523707793850383',
         version          : 'v23.0',
         xfbml            : true,
