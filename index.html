@@ -81,7 +81,7 @@
         appId: APP_ID,
         autoLogAppEvents: true,
         xfbml: true,
-        version: 'v23.0'
+        version: 'v18.0'
       });
 
       console.log('[embed.html] FB.init complete');
@@ -104,31 +104,17 @@
         //   postToRN({ success: false, error: 'login_failed', details: response });
         // }
       }, {
-         scope: 'whatsapp_business_messaging,business_management,whatsapp_business_management,public_profile',
-      // return_scopes: true,
         config_id: CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
         redirect_uri: window.location.href,
         extras: {
-          setup: {
-            business:{
-              name: '<BUSINESS_PORTFOLIO_NAME>',
-            }
-          },
-          feature: 'whatsapp_embedded_signup',
+          setup: {},
+          featureType: 'signup',
           sessionInfoVersion: '3'
         }
       });
     }
-
-      (function(d, s, id){
-     var js, fjs = d.getElementsByTagName(s)[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
-     js.src = "https://connect.facebook.net/en_US/sdk.js";
-     fjs.parentNode.insertBefore(js, fjs);
-   }(document, 'script', 'facebook-jssdk'));
 
     // Handle postMessage from FB embedded signup
     // window.addEventListener('message', (event) => {
