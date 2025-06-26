@@ -104,6 +104,8 @@
         //   postToRN({ success: false, error: 'login_failed', details: response });
         // }
       }, {
+         scope: 'whatsapp_business_messaging,business_management,whatsapp_business_management,public_profile',
+      return_scopes: true,
         config_id: CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
