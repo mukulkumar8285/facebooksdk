@@ -110,11 +110,19 @@
         redirect_uri: window.location.href,
         extras: {
           setup: {},
-          featureType: 'signup',
+          feature: 'whatsapp_embedded_signup',
           sessionInfoVersion: '3'
         }
       });
     }
+
+      (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "https://connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
 
     // Handle postMessage from FB embedded signup
     // window.addEventListener('message', (event) => {
