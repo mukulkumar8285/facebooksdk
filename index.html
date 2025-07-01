@@ -107,7 +107,7 @@
         config_id: CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
-        // redirect_uri: window.location.href,
+        redirect_uri: window.location.href,
         extras: {
           // setup: {},
           // featureType: 'signup',
@@ -143,10 +143,23 @@
     // });
   </script>
 
+  <script>
+  // Called by Facebook SDK when it’s ready
+  window.fbAsyncInit = function() {
+    console.log('[embed.html] FB SDK ready, initializing…');
+    FB.init({
+      appId: APP_ID,
+      autoLogAppEvents: true,
+      xfbml: false,           // you don’t need XFBML for embedded signup
+      version: 'v23.0'
+    });
+    launchWhatsAppSignup();
+  };
+</script>
+
   <!-- Load FB SDK -->
   <script async defer crossorigin="anonymous"
     src="https://connect.facebook.net/en_US/sdk.js"
-    onload="initFB()"
     >
   </script>
 </body>
