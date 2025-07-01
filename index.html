@@ -81,7 +81,7 @@
         appId: APP_ID,
         autoLogAppEvents: true,
         xfbml: true,
-        version: 'v18.0'
+        version: "v23.0"
       });
 
       console.log('[embed.html] FB.init complete');
@@ -107,11 +107,12 @@
         config_id: CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
-        redirect_uri: window.location.href,
+        // redirect_uri: window.location.href,
         extras: {
-          setup: {},
-          featureType: 'signup',
-          sessionInfoVersion: '3'
+          // setup: {},
+          // featureType: 'signup',
+          // sessionInfoVersion: '3'
+          version: "v3"
         }
       });
     }
