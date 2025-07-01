@@ -4,117 +4,149 @@
   <meta charset="UTF-8">
   <title>WhatsApp Embedded Signup</title>
   <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    #status { margin-top: 1rem; color: #555; }
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+    }
+    #status {
+      margin-top: 1rem;
+      color: #555;
+    }
   </style>
 </head>
 <body>
-  <!-- Optional status display -->
+  <!-- <h2>WhatsApp Embedded Signup</h2>
   <div id="status">Initializing...</div>
-  <div id="fb-root"></div>
+  <div id="fb-root"></div> -->
 
   <script>
     // Constants
-    const APP_ID    = '523707793850383';
+    const APP_ID = '523707793850383';
     const CONFIG_ID = '683389464136204';
+    // const REDIRECT_URI = 'https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ';
+
+    // Replace window.open to force same-window redirect
+    console.log('[embed.html] Overriding window.open');
+    window.open = function (url) {
+      console.log('[embed.html] window.open intercepted, redirecting to:', url);
+      window.location.href = url;
+    };
 
     // Helper to log status on screen and console
     function logStatus(msg) {
-      console.log('[embed] STATUS:', msg);
+      console.log('[embed.html] STATUS:', msg);
       const el = document.getElementById('status');
       if (el) el.textContent = msg;
     }
 
-    // Post message to React Native
-    function postToRN(payload) {
-      const msg = JSON.stringify(payload);
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(msg);
-        console.log('[embed] postMessage →', payload);
+    // Post message to React Native (if present)
+    function postToRN(data) {
+      try {
+        const str = JSON.stringify(data);
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(str);
+          console.log('[embed.html] postMessage sent to React Native:', data);
+        }
+      } catch (e) {
+        console.error('[embed.html] Failed to stringify data for RN:', e);
       }
     }
 
-    // Handle FB SDK load error
+    // Redirect or close the window after a delay
+    function closeAfterSuccess(seconds = 15) {
+      logStatus(`Success! Closing window in ${seconds} seconds...`);
+      setTimeout(() => {
+        try {
+          window.close();
+        } catch (err) {
+          console.warn('[embed.html] window.close failed. Redirecting instead.');
+        }
+        window.location.href = 'https://mukulkumar8285.github.io/';
+      }, seconds * 1000);
+    }
+
+    // Handle SDK load failure
     function onFbSdkError() {
+      console.error('[embed.html] FB SDK failed to load');
       logStatus('FB SDK failed to load');
       postToRN({ success: false, error: 'sdk_load_failure' });
     }
 
-    // Parse legacy fragment #cb={...}
-    function parseCbFragment() {
-      const hash = window.location.hash || '';
-      if (!hash.startsWith('#cb=')) return null;
-      try {
-        return JSON.parse(decodeURIComponent(hash.slice(4)));
-      } catch {}
-      return null;
+    // Initialize FB SDK
+    function initFB() {
+      console.log('[embed.html] Initializing FB SDK');
+      // logStatus('FB SDK loaded. Initializing...');
+
+      FB.init({
+        appId: APP_ID,
+        autoLogAppEvents: true,
+        xfbml: true,
+        version: 'v23.0'
+      });
+
+      console.log('[embed.html] FB.init complete');
+      // logStatus('FB initialized. Launching WhatsApp signup...');
+      launchWhatsAppSignup();
     }
 
-    // Launch the embedded signup flow
+    // Launch WhatsApp embedded signup
     function launchWhatsAppSignup() {
-      logStatus('Launching WhatsApp signup...');
+      console.log('[embed.html] launchWhatsAppSignup started');
 
       FB.login(response => {
-        // User canceled or failed
-        if (response.status !== 'connected') {
-          logStatus('User cancelled or not authorized');
-          postToRN({ success: false, error: 'user_cancel', details: response });
-        }
-        // Otherwise, wait for postMessage or fragment
+        // console.log('[embed.html] FB.login response:', response);
+
+        // if (response.status === 'connected') {
+        //   logStatus('Login successful. Waiting for signup completion...');
+        // } else {
+        //   console.error('[embed.html] Login failed or cancelled');
+        //   logStatus('Login failed or cancelled');
+        //   postToRN({ success: false, error: 'login_failed', details: response });
+        // }
       }, {
         config_id: CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
         redirect_uri: window.location.href,
-        extras: { setup: {}, version: 'v3' }
+        extras: {
+          setup: {},
+          featureType: 'signup',
+          sessionInfoVersion: '3'
+        }
       });
     }
 
-    // Listen for postMessage JSON payload
-    window.addEventListener('message', event => {
-      if (typeof event.data !== 'string') return;
-      try {
-        const payload = JSON.parse(event.data);
-        if (payload.type === 'WA_EMBEDDED_SIGNUP') {
-          logStatus('Signup completed');
-          postToRN({ success: true, data: payload });
-          return;
-        }
-      } catch {};
-    });
+    // Handle postMessage from FB embedded signup
+    // window.addEventListener('message', (event) => {
+    //   console.log('[embed.html] Message received from origin:', event.origin);
 
-    // Initialize FB SDK on load
-    window.fbAsyncInit = function() {
-      logStatus('FB SDK ready, initializing...');
-      FB.init({
-        appId:            APP_ID,
-        autoLogAppEvents: true,
-        xfbml:            false,
-        version:          'v23.0'
-      });
+    //   if (typeof event.data !== 'string') {
+    //     console.warn('[embed.html] Ignoring non-string message:', event.data);
+    //     return;
+    //   }
 
-      // Check legacy fragment first
-      const cbData = parseCbFragment();
-      if (cbData) {
-        logStatus('Received fragment payload');
-        postToRN({ success: true, data: cbData });
-      } else {
-        launchWhatsAppSignup();
-      }
-    };
+    //   try {
+    //     const payload = JSON.parse(event.data);
+    //     console.log('[embed.html] Parsed payload:', payload);
 
-    // Inject SDK script
-    (function(d, s, id) {
-      const fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) return;
-      const js = d.createElement(s);
-      js.id = id;
-      js.async = true;
-      js.defer = true;
-      js.onerror = onFbSdkError;
-      js.src = 'https://connect.facebook.net/en_US/sdk.js';
-      fjs.parentNode.insertBefore(js, fjs);
-    })(document, 'script', 'facebook-jssdk');
+    //     if (payload.type === 'WA_EMBEDDED_SIGNUP') {
+    //       logStatus('Signup completed successfully!');
+    //       postToRN({ success: true, data: payload });
+    //       closeAfterSuccess(15);
+    //     } else {
+    //       console.warn('[embed.html] Unknown payload type:', payload.type);
+    //     }
+    //   } catch (err) {
+    //     console.error('[embed.html] Failed to parse message:', err, event.data);
+    //   }
+    // });
+  </script>
+
+  <!-- Load FB SDK -->
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_US/sdk.js"
+    onload="initFB()"
+    >
   </script>
 </body>
 </html>
