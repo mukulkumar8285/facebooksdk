@@ -99,16 +99,17 @@
 
     function postToReactNative(data) {
       try {
-        if (window.ReactNativeWebView) {
+        // if (window.ReactNativeWebView) {
           const message = JSON.stringify({
             type: 'whatsapp_signup_event',
             timestamp: Date.now(),
             ...data
           });
-          window.ReactNativeWebView.postMessage(message);
+          // window.ReactNativeWebView.postMessage(message);
+          window.postMessage(message, '*');
           log('Message sent to RN:', data);
           return true;
-        }
+        // }
       } catch (error) {
         log('Failed to send message to RN:', error);
       }
