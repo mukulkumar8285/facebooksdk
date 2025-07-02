@@ -55,7 +55,8 @@
 <body>
   <div id="loadingContainer" class="loading-container">
     <div class="spinner"></div>
-    <div class="loading-text">Setting up WhatsApp Business...</div>
+    <div class="loading-text">Ready to start WhatsApp Business setup.</div>
+    <button id="startBtn" style="margin-top:20px;padding:12px 24px;font-size:16px;">Start Signup</button>
   </div>
 
   <script>
@@ -355,23 +356,13 @@
     async function initialize() {
       try {
         log('Starting WhatsApp Embedded Signup SDK');
-        
-        // Setup message listener first
         setupMessageListener();
-        
-        // Load and initialize Facebook SDK
         await loadFacebookSDK();
         await initializeFacebook();
-        
-        // Auto-start the signup flow
-        if (CONFIG.AUTO_START) {
-          await launchWhatsAppSignup();
-        }
-        
+        // Do not auto-start signup here
       } catch (error) {
         log('Initialization failed:', error);
         updateLoadingText('Failed to initialize. Please try again.');
-        
         postToReactNative({
           success: false,
           error: 'initialization_failure',
@@ -413,6 +404,18 @@
         log('Manual start failed:', error);
       });
     };
+
+    // Add button click handler to start signup
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('startBtn');
+      if (btn) {
+        btn.onclick = function() {
+          btn.style.display = 'none';
+          updateLoadingText('Opening WhatsApp Business setup...');
+          launchWhatsAppSignup();
+        };
+      }
+    });
 
   </script>
 </body>
