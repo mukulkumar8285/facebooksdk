@@ -189,14 +189,11 @@
               const code = response.authResponse.code;
               log('Exchangeable token received:', code);
               
-              // Send token to React Native immediately
-              postToReactNative({
-                success: true,
-                event: 'token_received',
-                code: code,
-                message: 'Exchangeable token received'
-              });
-              
+              // Redirect to a custom URL with the code as a query param
+              window.location.href = "https://mukulkumar8285.github.io/facebooksdk/index.html" + encodeURIComponent(code);
+
+              // Optionally, you can still call postToReactNative for debugging
+              // postToReactNative({ ... });
               resolve(response);
             } else if (response.status === 'not_authorized') {
               log('User denied permissions');
