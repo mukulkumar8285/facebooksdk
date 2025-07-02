@@ -2,151 +2,464 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WhatsApp Embedded Signup</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    .logo {
+      width: 60px;
+      height: 60px;
+      background: #25D366;
+      border-radius: 12px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    h1 {
+      color: #1a1a1a;
+      margin: 0 0 10px 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    p {
+      color: #666;
+      margin: 0 0 30px 0;
+      line-height: 1.5;
     }
     #status {
-      margin-top: 1rem;
-      color: #555;
+      margin: 20px 0;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .status-loading {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #bbdefb;
+    }
+    .status-success {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    .status-error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+    .status-warning {
+      background: #fff3e0;
+      color: #ef6c00;
+      border: 1px solid #ffcc02;
+    }
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #25D366;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <!-- <h2>WhatsApp Embedded Signup</h2>
-  <div id="status">Initializing...</div>
-  <div id="fb-root"></div> -->
+  <div class="container">
+    <div class="logo">WA</div>
+    <h1>WhatsApp Business Setup</h1>
+    <p>Complete your WhatsApp Business Account setup to start messaging your customers.</p>
+    
+    <div id="status" class="status-loading">
+      <span class="loading-spinner"></span>
+      Initializing WhatsApp Business setup...
+    </div>
+  </div>
 
   <script>
-    // Constants
-    const APP_ID = '523707793850383';
-    const CONFIG_ID = '683389464136204';
-    // const REDIRECT_URI = 'https://developers.facebook.com/es/oauth/callback/?business_id=2037440503145616&nonce=h9ZoGn9YspfYSbFfJbJakCs4BaJnjVHQ';
-
-    // Replace window.open to force same-window redirect
-    console.log('[embed.html] Overriding window.open');
-    window.open = function (url) {
-      console.log('[embed.html] window.open intercepted, redirecting to:', url);
-      window.location.href = url;
+    // ============================================================================
+    // CONFIGURATION - Replace with your actual values
+    // ============================================================================
+    const CONFIG = {
+      APP_ID: '523707793850383',           // Your Facebook App ID
+      CONFIG_ID: '683389464136204',        // Your Facebook Login for Business Configuration ID
+      GRAPH_API_VERSION: 'v23.0',          // Graph API version
+      FEATURE_TYPE: '',                    // Leave empty for default flow, or use: 'only_waba_sharing', 'whatsapp_business_app_onboarding', 'marketing_messages_lite'
+      DEBUG: true                          // Set to false in production
     };
 
-    // Helper to log status on screen and console
-    function logStatus(msg) {
-      console.log('[embed.html] STATUS:', msg);
-      const el = document.getElementById('status');
-      if (el) el.textContent = msg;
-    }
-
-    // Post message to React Native (if present)
-    function postToRN(data) {
-      try {
-        const str = JSON.stringify(data);
-        if (window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage(str);
-          console.log('[embed.html] postMessage sent to React Native:', data);
-        }
-      } catch (e) {
-        console.error('[embed.html] Failed to stringify data for RN:', e);
+    // ============================================================================
+    // UTILITY FUNCTIONS
+    // ============================================================================
+    
+    function log(message, data = null) {
+      if (CONFIG.DEBUG) {
+        console.log(`[WhatsApp Signup] ${message}`, data || '');
       }
     }
 
-    // Redirect or close the window after a delay
-    function closeAfterSuccess(seconds = 15) {
-      logStatus(`Success! Closing window in ${seconds} seconds...`);
+    function updateStatus(message, type = 'loading') {
+      const statusEl = document.getElementById('status');
+      if (statusEl) {
+        statusEl.className = `status-${type}`;
+        statusEl.innerHTML = type === 'loading' 
+          ? `<span class="loading-spinner"></span>${message}`
+          : message;
+      }
+      log(`Status: ${message} (${type})`);
+    }
+
+    function postToReactNative(data) {
+      try {
+        if (window.ReactNativeWebView) {
+          const message = JSON.stringify({
+            type: 'whatsapp_signup_event',
+            timestamp: Date.now(),
+            ...data
+          });
+          window.ReactNativeWebView.postMessage(message);
+          log('Message sent to React Native:', data);
+          return true;
+        }
+      } catch (error) {
+        log('Failed to send message to React Native:', error);
+      }
+      return false;
+    }
+
+    // ============================================================================
+    // FACEBOOK SDK INITIALIZATION
+    // ============================================================================
+    
+    function initializeFacebookSDK() {
+      log('Initializing Facebook SDK');
+      updateStatus('Loading Facebook SDK...', 'loading');
+
+      // Check if FB SDK is already loaded
+      if (typeof FB !== 'undefined') {
+        log('FB SDK already loaded');
+        initFB();
+        return;
+      }
+
+      // Load FB SDK
+      const script = document.createElement('script');
+      script.async = true;
+      script.defer = true;
+      script.crossOrigin = 'anonymous';
+      script.src = 'https://connect.facebook.net/en_US/sdk.js';
+      
+      script.onload = function() {
+        log('FB SDK loaded successfully');
+        initFB();
+      };
+      
+      script.onerror = function() {
+        log('FB SDK failed to load');
+        updateStatus('Failed to load Facebook SDK. Please check your internet connection.', 'error');
+        postToReactNative({
+          success: false,
+          error: 'sdk_load_failure',
+          errorMessage: 'Facebook SDK failed to load'
+        });
+      };
+
+      document.head.appendChild(script);
+    }
+
+    function initFB() {
+      try {
+        log('Initializing FB.init');
+        updateStatus('Initializing Facebook connection...', 'loading');
+
+        FB.init({
+          appId: CONFIG.APP_ID,
+          autoLogAppEvents: true,
+          xfbml: true,
+          version: CONFIG.GRAPH_API_VERSION
+        });
+
+        log('FB.init completed successfully');
+        updateStatus('Facebook connected. Launching WhatsApp signup...', 'loading');
+        
+        // Small delay to ensure initialization is complete
+        setTimeout(() => {
+          launchWhatsAppSignup();
+        }, 500);
+
+      } catch (error) {
+        log('FB.init failed:', error);
+        updateStatus('Failed to initialize Facebook connection.', 'error');
+        postToReactNative({
+          success: false,
+          error: 'fb_init_failure',
+          errorMessage: error.message
+        });
+      }
+    }
+
+    // ============================================================================
+    // WHATSAPP EMBEDDED SIGNUP LAUNCH
+    // ============================================================================
+    
+    function launchWhatsAppSignup() {
+      log('Launching WhatsApp Embedded Signup');
+      updateStatus('Opening WhatsApp Business setup...', 'loading');
+
+      try {
+        FB.login(handleLoginResponse, {
+          config_id: CONFIG.CONFIG_ID,
+          response_type: 'code',
+          override_default_response_type: true,
+          extras: {
+            setup: {},
+            featureType: CONFIG.FEATURE_TYPE,
+            sessionInfoVersion: '3'
+          }
+        });
+      } catch (error) {
+        log('FB.login failed:', error);
+        updateStatus('Failed to launch WhatsApp setup.', 'error');
+        postToReactNative({
+          success: false,
+          error: 'login_launch_failure',
+          errorMessage: error.message
+        });
+      }
+    }
+
+    // ============================================================================
+    // RESPONSE HANDLERS
+    // ============================================================================
+    
+    function handleLoginResponse(response) {
+      log('Login response received:', response);
+
+      if (response.authResponse && response.authResponse.code) {
+        const code = response.authResponse.code;
+        log('Exchangeable token code received:', code);
+        
+        updateStatus('Setup completed! Processing your account...', 'success');
+        
+        // Send the exchangeable token to React Native
+        postToReactNative({
+          success: true,
+          event: 'token_received',
+          code: code,
+          message: 'Exchangeable token received successfully'
+        });
+
+        // The actual signup completion will be handled by the message event listener
+        // This is just the initial response with the exchangeable token
+        
+      } else if (response.status === 'not_authorized') {
+        log('User denied permissions');
+        updateStatus('Setup was cancelled. Please try again.', 'warning');
+        postToReactNative({
+          success: false,
+          error: 'user_denied',
+          errorMessage: 'User denied WhatsApp Business setup permissions'
+        });
+      } else {
+        log('Login failed or cancelled:', response);
+        updateStatus('Setup was cancelled or failed. Please try again.', 'error');
+        postToReactNative({
+          success: false,
+          error: 'login_failed',
+          errorMessage: 'WhatsApp Business setup failed or was cancelled',
+          details: response
+        });
+      }
+    }
+
+    // ============================================================================
+    // MESSAGE EVENT LISTENER (CRITICAL FOR SIGNUP COMPLETION)
+    // ============================================================================
+    
+    window.addEventListener('message', function(event) {
+      // Security check - only accept messages from Facebook
+      if (!event.origin.endsWith('facebook.com')) {
+        log('Ignoring message from non-Facebook origin:', event.origin);
+        return;
+      }
+
+      log('Message received from Facebook:', event.data);
+
+      try {
+        let data;
+        
+        // Handle both string and object messages
+        if (typeof event.data === 'string') {
+          data = JSON.parse(event.data);
+        } else {
+          data = event.data;
+        }
+
+        // Check if this is a WhatsApp Embedded Signup message
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          handleWhatsAppSignupMessage(data);
+        } else {
+          log('Non-WhatsApp message received:', data);
+        }
+
+      } catch (error) {
+        log('Failed to parse message:', error, event.data);
+        // Even if parsing fails, log the raw data for debugging
+        postToReactNative({
+          success: false,
+          error: 'message_parse_failure',
+          errorMessage: 'Failed to parse message from Facebook',
+          rawData: event.data
+        });
+      }
+    });
+
+    function handleWhatsAppSignupMessage(data) {
+      log('Processing WhatsApp signup message:', data);
+
+      switch (data.event) {
+        case 'FINISH':
+        case 'FINISH_ONLY_WABA':
+        case 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING':
+          handleSuccessfulSignup(data);
+          break;
+          
+        case 'CANCEL':
+          handleCancelledSignup(data);
+          break;
+          
+        default:
+          log('Unknown signup event:', data.event);
+          postToReactNative({
+            success: false,
+            error: 'unknown_event',
+            errorMessage: `Unknown signup event: ${data.event}`,
+            data: data
+          });
+      }
+    }
+
+    function handleSuccessfulSignup(data) {
+      log('WhatsApp signup completed successfully:', data);
+      
+      const result = {
+        success: true,
+        event: 'signup_completed',
+        data: {
+          phone_number_id: data.data?.phone_number_id,
+          waba_id: data.data?.waba_id,
+          business_id: data.data?.business_id
+        },
+        flowType: data.event,
+        message: 'WhatsApp Business Account setup completed successfully'
+      };
+
+      updateStatus('✅ Setup completed successfully! Your WhatsApp Business Account is ready.', 'success');
+      
+      // Send success data to React Native
+      postToReactNative(result);
+
+      // Auto-close after 3 seconds
       setTimeout(() => {
         try {
           window.close();
         } catch (err) {
-          console.warn('[embed.html] window.close failed. Redirecting instead.');
+          log('window.close failed, redirecting instead');
+          window.location.href = 'about:blank';
         }
-        window.location.href = 'https://mukulkumar8285.github.io/';
-      }, seconds * 1000);
+      }, 3000);
     }
 
-    // Handle SDK load failure
-    function onFbSdkError() {
-      console.error('[embed.html] FB SDK failed to load');
-      logStatus('FB SDK failed to load');
-      postToRN({ success: false, error: 'sdk_load_failure' });
-    }
+    function handleCancelledSignup(data) {
+      log('WhatsApp signup was cancelled:', data);
+      
+      let errorMessage = 'Setup was cancelled';
+      let errorType = 'user_cancelled';
 
-    // Initialize FB SDK
-    function initFB() {
-      console.log('[embed.html] Initializing FB SDK');
-      // logStatus('FB SDK loaded. Initializing...');
+      if (data.data?.error_message) {
+        errorMessage = data.data.error_message;
+        errorType = 'setup_error';
+      } else if (data.data?.current_step) {
+        errorMessage = `Setup cancelled at step: ${data.data.current_step}`;
+        errorType = 'cancelled_at_step';
+      }
 
-      FB.init({
-        appId: APP_ID,
-        autoLogAppEvents: true,
-        xfbml: true,
-        version: 'v23.0'
-      });
-
-      console.log('[embed.html] FB.init complete');
-      // logStatus('FB initialized. Launching WhatsApp signup...');
-      launchWhatsAppSignup();
-    }
-
-    // Launch WhatsApp embedded signup
-    function launchWhatsAppSignup() {
-      console.log('[embed.html] launchWhatsAppSignup started');
-
-      FB.login(response => {
-        // console.log('[embed.html] FB.login response:', response);
-
-        // if (response.status === 'connected') {
-        //   logStatus('Login successful. Waiting for signup completion...');
-        // } else {
-        //   console.error('[embed.html] Login failed or cancelled');
-        //   logStatus('Login failed or cancelled');
-        //   postToRN({ success: false, error: 'login_failed', details: response });
-        // }
-      }, {
-        config_id: CONFIG_ID,
-        response_type: 'code',
-        override_default_response_type: true,
-        redirect_uri: window.location.href,
-        extras: {
-          setup: {},
-          featureType: 'signup',
-          sessionInfoVersion: '3'
-        }
+      updateStatus('❌ Setup was cancelled. Please try again.', 'error');
+      
+      postToReactNative({
+        success: false,
+        error: errorType,
+        errorMessage: errorMessage,
+        currentStep: data.data?.current_step,
+        errorId: data.data?.error_id,
+        sessionId: data.data?.session_id,
+        timestamp: data.data?.timestamp
       });
     }
 
-    // Handle postMessage from FB embedded signup
-    // window.addEventListener('message', (event) => {
-    //   console.log('[embed.html] Message received from origin:', event.origin);
+    // ============================================================================
+    // ERROR HANDLING
+    // ============================================================================
+    
+    window.addEventListener('error', function(event) {
+      log('Global error caught:', event.error);
+      postToReactNative({
+        success: false,
+        error: 'global_error',
+        errorMessage: event.error?.message || 'Unknown error occurred',
+        filename: event.filename,
+        lineno: event.lineno
+      });
+    });
 
-    //   if (typeof event.data !== 'string') {
-    //     console.warn('[embed.html] Ignoring non-string message:', event.data);
-    //     return;
-    //   }
+    // ============================================================================
+    // INITIALIZATION
+    // ============================================================================
+    
+    // Start the process when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      log('Page loaded, starting WhatsApp signup process');
+      initializeFacebookSDK();
+    });
 
-    //   try {
-    //     const payload = JSON.parse(event.data);
-    //     console.log('[embed.html] Parsed payload:', payload);
+    // Fallback initialization if DOMContentLoaded already fired
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeFacebookSDK);
+    } else {
+      initializeFacebookSDK();
+    }
 
-    //     if (payload.type === 'WA_EMBEDDED_SIGNUP') {
-    //       logStatus('Signup completed successfully!');
-    //       postToRN({ success: true, data: payload });
-    //       closeAfterSuccess(15);
-    //     } else {
-    //       console.warn('[embed.html] Unknown payload type:', payload.type);
-    //     }
-    //   } catch (err) {
-    //     console.error('[embed.html] Failed to parse message:', err, event.data);
-    //   }
-    // });
-  </script>
-
-  <!-- Load FB SDK -->
-  <script async defer crossorigin="anonymous"
-    src="https://connect.facebook.net/en_US/sdk.js"
-    onload="initFB()"
-    >
   </script>
 </body>
 </html>
