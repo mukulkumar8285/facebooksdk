@@ -190,7 +190,7 @@
               log('Exchangeable token received:', code);
               
               // Redirect to a custom URL with the code as a query param
-              window.location.href = "https://mukulkumar8285.github.io/facebooksdk/index.html" + encodeURIComponent(code);
+              window.location.href = "https://mukulkumar8285.github.io/facebooksdk/index.html" + "?code=" + encodeURIComponent(code);
 
               // Optionally, you can still call postToReactNative for debugging
               // postToReactNative({ ... });
